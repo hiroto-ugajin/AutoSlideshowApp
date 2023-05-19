@@ -4,15 +4,21 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.content.ContentUris
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import jp.techacademy.hiroto.ugajin.autoslideshowapp.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(), View.OnClickListener  {
+class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var binding: ActivityMainBinding
+
+    private lateinit var cursor: Cursor
+
+//    private var currentPosition: Int = -1
 
     private val PERMISSIONS_REQUEST_CODE = 100
 
@@ -27,12 +33,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         val view = binding.root
         setContentView(view)
 
-        binding.button1.setOnClickListener(this)
+//        val resolver = contentResolver
+//        cursor = resolver.query(
+//            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
+//            null, // 項目（null = 全項目）
+//            null, // フィルタ条件（null = フィルタなし）
+//            null, // フィルタ用パラメータ
+//            null // ソート (nullソートなし）
+//        )!!
 
         // パーミッションの許可状態を確認する
         if (checkSelfPermission(readImagesPermission) == PackageManager.PERMISSION_GRANTED) {
             // 許可されている
-            getContentsInfo()
+
+            displayNextImage()
+
         } else {
             // 許可されていないので許可ダイアログを表示する
             requestPermissions(
@@ -42,8 +57,39 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         }
     }
 
+    private var currentPosition: Int = -1
+
+    private fun displayNextImage() {
+
+        val resolver = contentResolver
+        val cursor = resolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
+            null, // 項目（null = 全項目）
+            null, // フィルタ条件（null = フィルタなし）
+            null, // フィルタ用パラメータ
+            null // ソート (nullソートなし）
+        )
+
+        if (cursor != null && cursor.moveToNext()) {
+            // indexからIDを取得し、そのIDから画像のURIを取得する
+            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+            val id = cursor.getLong(fieldIndex)
+            val imageUri =
+                ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+
+            binding.imageView.setImageURI(imageUri)
+            currentPosition = cursor.position
+        } else {
+            // カーソルの最後に達した場合、最初に戻る
+            if (cursor != null) {
+                cursor.moveToFirst()
+            }
+            currentPosition = -1
+        }
+    }
+
     override fun onClick(v: View) {
-        getNextInfo()
+        displayNextImage()
     }
 
     override fun onRequestPermissionsResult(
@@ -55,81 +101,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener  {
         when (requestCode) {
             PERMISSIONS_REQUEST_CODE ->
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    getContentsInfo()
+                    displayNextImage()
+
                 }
-        }
-    }
-
-    private fun getContentsInfo() {
-        // 画像の情報を取得する
-        val resolver = contentResolver
-        val cursor = resolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
-            null, // 項目（null = 全項目）
-            null, // フィルタ条件（null = フィルタなし）
-            null, // フィルタ用パラメータ
-            null // ソート (nullソートなし）
-        )
-
-        if (cursor!!.moveToFirst()) {
-            // indexからIDを取得し、そのIDから画像のURIを取得する
-            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-            val id = cursor.getLong(fieldIndex)
-            val imageUri =
-                ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-            binding.imageView.setImageURI(imageUri)
-        }
-
-//        if (cursor!!.moveToFirst()) {
-//            do {
-//                // indexからIDを取得し、そのIDから画像のURIを取得する
-//                val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-//                val id = cursor.getLong(fieldIndex)
-//                val imageUri =
-//                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-//
-//                Log.d("UI_PARTS", "URI : $imageUri")
-//            } while (cursor.moveToNext())
-//        }
-
-        cursor.close()
-    }
-
-    private fun getNextInfo() {
-
-        // 画像の情報を取得する
-        val resolver = contentResolver
-        val cursor = resolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // データの種類
-            null, // 項目（null = 全項目）
-            null, // フィルタ条件（null = フィルタなし）
-            null, // フィルタ用パラメータ
-            null // ソート (nullソートなし）
-        )
-        if (cursor != null && (cursor.moveToFirst() || cursor.moveToNext())) {
-            if (cursor != null && cursor.moveToNext()) {
-
-                // indexからIDを取得し、そのIDから画像のURIを取得する
-                val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-                val id = cursor.getLong(fieldIndex)
-                val imageUri =
-                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                Log.d("UI_PARTS", "URI : $imageUri")
-                binding.imageView.setImageURI(imageUri)
-
-            } else {
-                if (cursor!!.moveToFirst()) {
-                    // indexからIDを取得し、そのIDから画像のURIを取得する
-                    val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-                    val id = cursor.getLong(fieldIndex)
-                    val imageUri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-
-                    binding.imageView.setImageURI(imageUri)
-                }
-            }
-            cursor.close()
         }
     }
 }
+
+
+
+
+
+
+
+
+
