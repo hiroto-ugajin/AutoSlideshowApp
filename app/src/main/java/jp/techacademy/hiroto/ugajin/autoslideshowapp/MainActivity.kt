@@ -70,21 +70,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             null // ソート (nullソートなし）
         )
 
-        if (cursor != null && cursor.moveToNext()) {
-            // indexからIDを取得し、そのIDから画像のURIを取得する
-            val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-            val id = cursor.getLong(fieldIndex)
-            val imageUri =
-                ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+        if (cursor != null) {
+            if (
+    //            cursor != null &&
+                cursor.moveToNext() != null) {
+                // indexからIDを取得し、そのIDから画像のURIを取得する
+                val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
+                val id = cursor.getLong(fieldIndex)
+                val imageUri =
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
-            binding.imageView.setImageURI(imageUri)
-            currentPosition = cursor.position
-        } else {
-            // カーソルの最後に達した場合、最初に戻る
-            if (cursor != null) {
-                cursor.moveToFirst()
+                binding.imageView.setImageURI(imageUri)
+                currentPosition = cursor.position
+            } else {
+                // カーソルの最後に達した場合、最初に戻る
+                if (cursor.moveToFirst() != null) {
+                    cursor.moveToFirst()
+                }
+                currentPosition = -1
             }
-            currentPosition = -1
         }
     }
 
