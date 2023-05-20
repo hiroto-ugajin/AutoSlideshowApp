@@ -18,6 +18,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var cursor: Cursor
 
+    var num: Int = 0
+
 //    private var currentPosition: Int = -1
 
     private val PERMISSIONS_REQUEST_CODE = 100
@@ -62,15 +64,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             null, // フィルタ用パラメータ
             null // ソート (nullソートなし）
         )
-
         if (cursor != null) {
-            if (
-    //            cursor != null &&
-                cursor.moveToPosition(currentPosition)
-//                cursor.moveToNext()
-                != null
-            )
-            {
+            this.num = cursor.count
+        }
+
+        if (cursor != null && currentPosition < this.num) {
+            if (cursor.moveToPosition(currentPosition) != null) {
                 // indexからIDを取得し、そのIDから画像のURIを取得する
                 val fieldIndex = cursor.getColumnIndex(MediaStore.Images.Media._ID)
                 val id = cursor.getLong(fieldIndex)
@@ -78,16 +77,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
                 binding.imageView.setImageURI(imageUri)
-                currentPosition ++
-//                = cursor.position
-            } else {
 
-                // カーソルの最後に達した場合、最初に戻る
-                if (cursor.moveToPosition(0) != null) {
-                    cursor.moveToPosition(0)
-                }
-                currentPosition = 1
+                if (currentPosition < this.num - 1) { currentPosition ++
+                } else if (currentPosition == this.num - 1) { currentPosition = 0
             }
+           }
         }
 
         if (cursor != null) {
@@ -97,7 +91,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onClick(v: View) {
         displayNextImage()
-        Log.d("UI_PARTS", "進むボタンがタップされました。")
     }
 
     override fun onRequestPermissionsResult(
