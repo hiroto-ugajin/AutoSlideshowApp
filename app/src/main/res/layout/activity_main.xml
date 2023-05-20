@@ -35,13 +35,13 @@
 <!--        android:orientation="horizontal">-->
 
         <Button
-        android:id="@+id/button1"
+        android:id="@+id/buttonGo"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="進む" />
 
         <Button
-        android:id="@+id/button2"
+        android:id="@+id/buttonBack"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:text="戻る" />
