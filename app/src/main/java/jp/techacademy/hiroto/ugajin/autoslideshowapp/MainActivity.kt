@@ -6,11 +6,14 @@ import android.content.ContentUris
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import jp.techacademy.hiroto.ugajin.autoslideshowapp.databinding.ActivityMainBinding
+import java.util.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -19,6 +22,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var cursor: Cursor
 
     var num: Int = 0
+
+    private var isTimerRunning = false
+    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
 
     private val PERMISSIONS_REQUEST_CODE = 100
 
@@ -36,6 +43,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 //        binding.buttonGo.setOnClickListener (this)
         binding.buttonGo.setOnClickListener(buttonGoClickListener)
         binding.buttonBack.setOnClickListener(buttonBackClickListener)
+        binding.buttonSlideShow.setOnClickListener(buttonSlideShowClickListener)
 
         // パーミッションの許可状態を確認する
         if (checkSelfPermission(readImagesPermission) == PackageManager.PERMISSION_GRANTED) {
@@ -49,6 +57,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 arrayOf(readImagesPermission),
                 PERMISSIONS_REQUEST_CODE
             )
+        }
+
+        handler = Handler(Looper.getMainLooper())
+        runnable = object : Runnable {
+            override fun run() {
+                // ここに定期的に実行したい処理を記述する
+                // 例: Log.d("Timer", "Timer is running")
+                displayNextImage()
+
+                if (isTimerRunning) {
+                    handler.postDelayed(this, 2000) // 1秒ごとに実行する場合
+                }
+            }
         }
     }
 
@@ -146,6 +167,23 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         displayPreviousImage()
     }
 
+    private val buttonSlideShowClickListener = View.OnClickListener {
+        if (isTimerRunning) {
+            stopTimer()
+        } else {
+            startTimer()
+        }
+    }
+
+    private fun startTimer() {
+        isTimerRunning = true
+        handler.post(runnable)
+    }
+
+    private fun stopTimer() {
+        isTimerRunning = false
+        handler.removeCallbacks(runnable)
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
