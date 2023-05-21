@@ -12,6 +12,8 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import jp.techacademy.hiroto.ugajin.autoslideshowapp.databinding.ActivityMainBinding
 import java.util.*
 
@@ -27,7 +29,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var handler: Handler
     private lateinit var runnable: Runnable
 
-    private val PERMISSIONS_REQUEST_CODE = 100
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                Log.d("ANDROID", "許可された")
+                displayNextImage()
+            } else {
+                Log.d("ANDROID", "許可されなかった")
+                Toast.makeText(this, "パーミッションが拒否されました", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     // APIレベルによって許可が必要なパーミッションを切り替える
     private val readImagesPermission =
@@ -40,30 +51,25 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val view = binding.root
         setContentView(view)
 
-//        binding.buttonGo.setOnClickListener (this)
+        binding.buttonPermission.setOnClickListener {
+            // パーミッションの許可状態を確認する
+            if (checkSelfPermission(readImagesPermission) == PackageManager.PERMISSION_GRANTED) {
+                // 許可されている
+                displayNextImage()
+            } else {
+                // 許可されていないので許可ダイアログを表示する
+                requestPermissionLauncher.launch(readImagesPermission)
+            }
+        }
+
         binding.buttonGo.setOnClickListener(buttonGoClickListener)
         binding.buttonBack.setOnClickListener(buttonBackClickListener)
         binding.buttonSlideShow.setOnClickListener(buttonSlideShowClickListener)
-
-        // パーミッションの許可状態を確認する
-        if (checkSelfPermission(readImagesPermission) == PackageManager.PERMISSION_GRANTED) {
-            // 許可されている
-
-            displayNextImage()
-
-        } else {
-            // 許可されていないので許可ダイアログを表示する
-            requestPermissions(
-                arrayOf(readImagesPermission),
-                PERMISSIONS_REQUEST_CODE
-            )
-        }
 
         handler = Handler(Looper.getMainLooper())
         runnable = object : Runnable {
             override fun run() {
                 // ここに定期的に実行したい処理を記述する
-                // 例: Log.d("Timer", "Timer is running")
                 displayNextImage()
 
                 if (isTimerRunning) {
@@ -189,21 +195,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         binding.buttonGo.isEnabled = true
         binding.buttonBack.isEnabled = true
         handler.removeCallbacks(runnable)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            PERMISSIONS_REQUEST_CODE ->
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    displayNextImage()
-
-                }
-        }
     }
 }
 
