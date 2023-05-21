@@ -177,11 +177,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun startTimer() {
         isTimerRunning = true
+        binding.buttonSlideShow.text = "停止"
+        binding.buttonGo.isEnabled = false
+        binding.buttonBack.isEnabled = false
         handler.post(runnable)
     }
 
     private fun stopTimer() {
         isTimerRunning = false
+        binding.buttonSlideShow.text = "再生"
+        binding.buttonGo.isEnabled = true
+        binding.buttonBack.isEnabled = true
         handler.removeCallbacks(runnable)
     }
 
